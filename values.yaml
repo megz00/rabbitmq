@@ -131,7 +131,7 @@ deployment:
   # Probe type (TCP/httpGet/EXEC/GRPC) - Case Sensative
   probe_type: TCP
   # Port For Probe (Ignored If Type = EXEC)
-  probe_port: 80
+  probe_port: 15672
   # URL To Do Probe On (Ignored if Probe != HTTPGet)
   probe_path: /test.html
   # Probe Scheme (HTTP/HTTPS) (Ignored if Probe != HTTPGet)
