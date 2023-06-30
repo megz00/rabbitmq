@@ -103,7 +103,7 @@ deployment:
   mount_volumes: true
   volumes_list:
     #- volume_name|mount_point
-    - pvc1|/bitnami/rabbitmq/mnesia
+    - staging-rabbitmq|/bitnami/rabbitmq/mnesia
   ########
   # Congis Mounts
   # True = mount, False = Ignore
