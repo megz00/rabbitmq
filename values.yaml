@@ -1,0 +1,153 @@
+# Name Of Env (prod/dev/ or anything ....)
+# What ever you want
+# Remember to append env name to config files inside config dir of that env (case sensative)
+env: staging
+##########################
+### Storage Creation (PVC)
+##########################
+pvc:
+  # True = Create, False = Do Not Create
+  create: true
+  # Storage Class Name (kubectl get sc)
+  storage_class: nfs
+  # List Of Volume Claims To Create
+  volumes_list:
+    # $Mode = ReadWriteMany Or ReadWriteOnce (ReadWriteMany for volumes that need to be mounted in multiple pods)
+    #- name|size in GB|$Mode -> Example: "- pvc1|10|ReadWriteOnce"
+    - staging-rabbitmq|10|ReadWriteMany
+##########################
+### Config Maps Install
+##########################
+config_maps:
+  # True = Create, False = Do Not Create
+  create: true
+  # List of config files to install as config maps (Place config files inside configs dir)
+  # Do not include env name in filename
+  # example: 
+  configs_list:
+    #- name|config-file-name -> Example: "- nginx-config-map|nginx.conf"
+    # If env = staging, Actual file name inside configs must be "staging-nginx.conf"
+    - nginx-config-map|nginx.conf
+    - redis-config-map|redis.conf
+##########################
+### Deployment & Service
+##########################
+deployment:
+  # True = Create, False = Do Not Create
+  create_deployment: true
+  # Deployment And Service Name
+  name: staging-rabbitmq
+  # Deployment Type (Deployment, StatefulSet, DaemonSet)
+  deployment_type: Deployment
+  # Image name And Tag
+  image: bitnami/rabbitmq
+  tag: 3.12
+  # Number of replicas
+  replicas: 1
+  #Image Pull Policy (IfNotPresent, Always)
+  pull_policy: Always
+  # History Limit - How many previous releases to keep
+  history_limit: 3
+  # Restart Policy (Keep as Always unless you know what you are doing)
+  restart_policy: Always
+  ########
+  # Set requests and limits
+  # True = use False = ignore
+  set_requests: true
+  # CPU Requests
+  cpu_requests: 0.5
+  # Memory (RAM) Requests
+  memory_requests: 512Mi
+  ###
+  set_limits: true
+  # CPU Limits
+  cpu_limits: 0.5
+  # Memory (RAM) Limits
+  memory_limits: 512Mi
+  # Container Command (Set Command or command args if the contaier does not run service via entrypoint)
+  # True = use False = ignore
+  use_command: false
+  # Command
+  command: ls
+  # Pass Command Args
+  use_args: false
+  # Args for command
+  command_args:
+    #- command args list
+    - -l
+    - -a
+    - -h
+  ########
+  # Service And Service port
+  # True = Create, False = Do Not Create
+  create_service: true
+  # Select Service type (ClusterIP, NodePort, LoadBalancer)
+  service_type: ClusterIP
+  # List of ports used (Pod port = port opened on pod, external port = port used to communicate with service from ouside the pod)
+  ports_list:
+    #- protocol|pod_port|external_port
+    #- 8080|80
+    - TCP|15672|15672
+    - TCP|5672|5672
+  ########
+  # Use Docker Secret for private images
+  # True = Use, False = Ignore
+  use_secret: false
+  # Secrets list (Secrets must be created in cluster manually)
+  secret_list:
+    - docker-secret
+  ########
+  # Volumes And Mounts
+  # True = mount, False = Ignore
+  # Volumes must be created in the PVC section on top
+  mount_volumes: true
+  volumes_list:
+    #- volume_name|mount_point
+    - pvc1|/bitnami/rabbitmq/mnesia
+  ########
+  # Congis Mounts
+  # True = mount, False = Ignore
+  # configs maps be created in the config_maps section section on top
+  mount_configs: true
+  configs_list:
+    #- config-map-name|config-file-name|mount_point
+    - nginx-config-map|nginx.conf|/etc/nginx.conf
+    - redis-config-map|redis.conf|/etc/redis.conf
+  ########
+  # Env Vars Loader
+  # env vars file should be inside configs/env_vars/
+  # env var file name must be "environment name.txt"
+  # env file format
+  #- name: ""
+  #  value: ""
+  # True = load, False = Ignore
+  load_env: true
+  ########
+  # Health Probes
+  # Supported Probes Are TCP, HTTP, EXEC, GRPC
+  # Supported Types Are (Startup, Readiness, Liveness)
+  # True = load, False = Ignore
+  use_probes: true
+  # Probe type (TCP/httpGet/EXEC/GRPC) - Case Sensative
+  probe_type: TCP
+  # Port For Probe (Ignored If Type = EXEC)
+  probe_port: 80
+  # URL To Do Probe On (Ignored if Probe != HTTPGet)
+  probe_path: /test.html
+  # Probe Scheme (HTTP/HTTPS) (Ignored if Probe != HTTPGet)
+  probe_scheme: HTTP
+  # Command For Probe (Ignored if Probe != EXEC)
+  probe_command: ls -la
+  # Probes Interval in seconds
+  probe_interval: 10
+  # Count To Fail (When to treat probe/pos as failed)
+  fail_count: 6
+  # Count to success (When to treat probe/pos as OK)
+  success_count: 3
+  # Startup Probe Fail Count (Applies for startup probe only)
+  startup_fail_count: 30
+  # Start Delay (Wait time in seconds before starting to run probes)
+  start_delay: 10
+  # probe time out (Time in seconds allowed for probe to return a result before taken as failed)
+  probe_timeout: 3
+  ########

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: rabbitmq
+version: "1.0"
+maintainers:
+  - name: Eslam Shapsough
+    email: eslam@eshapsough.com

@@ -1,0 +1,212 @@
+{{- if .Values.deployment.create_deployment }}
+apiVersion: apps/v1
+kind: {{ .Values.deployment.deployment_type }}
+metadata:
+  name: {{ .Values.deployment.name }}
+  labels:
+    app: {{ .Values.deployment.name }}
+spec:
+  {{- if or (eq (.Values.deployment.deployment_type) "Deployment") (eq (.Values.deployment.deployment_type) "StatefulSet") }}
+  replicas: {{ .Values.deployment.replicas }}
+  {{- end }}
+  revisionHistoryLimit: {{ .Values.deployment.history_limit }}
+  selector:
+    matchLabels:
+      app: {{ .Values.deployment.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.deployment.name }}
+    spec:
+      restartPolicy: {{ .Values.deployment.restart_policy }}
+      containers:
+      - name: {{ .Values.deployment.name }}
+        image: {{ .Values.deployment.image }}:{{ .Values.deployment.tag }}
+        imagePullPolicy: {{ .Values.deployment.pull_policy }}
+        {{- if .Values.deployment.use_probes }}
+        {{- if (eq (.Values.deployment.probe_type) "EXEC") }}
+        startupProbe:
+          exec:
+            command: ["{{ .Values.deployment.probe_command }}"]
+          periodSeconds: {{ .Values.deployment.probe_interval }}
+          failureThreshold: {{ .Values.deployment.startup_fail_count }}
+          initialDelaySeconds: {{ .Values.deployment.start_delay }}
+          timeoutSeconds: {{ .Values.deployment.probe_timeout }}
+        livenessProbe:
+          exec:
+            command: ["{{ .Values.deployment.probe_command }}"]
+          periodSeconds: {{ .Values.deployment.probe_interval }}
+          failureThreshold: {{ .Values.deployment.fail_count }}
+          initialDelaySeconds: {{ .Values.deployment.start_delay }}
+          timeoutSeconds: {{ .Values.deployment.probe_timeout }}
+          successThreshold: 1
+        readinessProbe:
+          exec:
+            command: ["{{ .Values.deployment.probe_command }}"]
+          periodSeconds: {{ .Values.deployment.probe_interval }}
+          failureThreshold: {{ .Values.deployment.fail_count }}
+          initialDelaySeconds: {{ .Values.deployment.start_delay }}
+          timeoutSeconds: {{ .Values.deployment.probe_timeout }}
+          successThreshold: {{ .Values.deployment.success_count }}
+        {{- end }}
+        {{- if (eq (.Values.deployment.probe_type) "TCP") }}
+        startupProbe:
+          tcpSocket:
+            port: {{ .Values.deployment.probe_port }}
+          periodSeconds: {{ .Values.deployment.probe_interval }}
+          failureThreshold: {{ .Values.deployment.startup_fail_count }}
+          initialDelaySeconds: {{ .Values.deployment.start_delay }}
+          timeoutSeconds: {{ .Values.deployment.probe_timeout }}
+        livenessProbe:
+          tcpSocket:
+            port: {{ .Values.deployment.probe_port }}
+          periodSeconds: {{ .Values.deployment.probe_interval }}
+          failureThreshold: {{ .Values.deployment.fail_count }}
+          initialDelaySeconds: {{ .Values.deployment.start_delay }}
+          timeoutSeconds: {{ .Values.deployment.probe_timeout }}
+          successThreshold: 1
+        readinessProbe:
+          tcpSocket:
+            port: {{ .Values.deployment.probe_port }}
+          periodSeconds: {{ .Values.deployment.probe_interval }}
+          failureThreshold: {{ .Values.deployment.fail_count }}
+          initialDelaySeconds: {{ .Values.deployment.start_delay }}
+          timeoutSeconds: {{ .Values.deployment.probe_timeout }}
+          successThreshold: {{ .Values.deployment.success_count }}
+        {{- end }}
+        {{- if (eq (.Values.deployment.probe_type) "httpGet") }}
+        startupProbe:
+          httpGet:
+            port: {{ .Values.deployment.probe_port }}
+            path: {{ .Values.deployment.probe_path }}
+            scheme: {{ .Values.deployment.probe_scheme }}
+          periodSeconds: {{ .Values.deployment.probe_interval }}
+          failureThreshold: {{ .Values.deployment.startup_fail_count }}
+          initialDelaySeconds: {{ .Values.deployment.start_delay }}
+          timeoutSeconds: {{ .Values.deployment.probe_timeout }}
+        livenessProbe:
+          httpGet:
+            port: {{ .Values.deployment.probe_port }}
+            path: {{ .Values.deployment.probe_path }}
+            scheme: {{ .Values.deployment.probe_scheme }}
+          periodSeconds: {{ .Values.deployment.probe_interval }}
+          failureThreshold: {{ .Values.deployment.fail_count }}
+          initialDelaySeconds: {{ .Values.deployment.start_delay }}
+          timeoutSeconds: {{ .Values.deployment.probe_timeout }}
+          successThreshold: 1
+        readinessProbe:
+          httpGet:
+            port: {{ .Values.deployment.probe_port }}
+            path: {{ .Values.deployment.probe_path }}
+            scheme: {{ .Values.deployment.probe_scheme }}
+          periodSeconds: {{ .Values.deployment.probe_interval }}
+          failureThreshold: {{ .Values.deployment.fail_count }}
+          initialDelaySeconds: {{ .Values.deployment.start_delay }}
+          timeoutSeconds: {{ .Values.deployment.probe_timeout }}
+          successThreshold: {{ .Values.deployment.success_count }}
+        {{- end }}
+        {{- if (eq (.Values.deployment.probe_type) "GRPC") }}
+        startupProbe:
+          grpc:
+            port: {{ .Values.deployment.probe_port }}
+          periodSeconds: {{ .Values.deployment.probe_interval }}
+          failureThreshold: {{ .Values.deployment.startup_fail_count }}
+          initialDelaySeconds: {{ .Values.deployment.start_delay }}
+          timeoutSeconds: {{ .Values.deployment.probe_timeout }}
+        livenessProbe:
+          grpc:
+            port: {{ .Values.deployment.probe_port }}
+          periodSeconds: {{ .Values.deployment.probe_interval }}
+          failureThreshold: {{ .Values.deployment.fail_count }}
+          initialDelaySeconds: {{ .Values.deployment.start_delay }}
+          timeoutSeconds: {{ .Values.deployment.probe_timeout }}
+          successThreshold: 1
+        readinessProbe:
+          grpc:
+            port: {{ .Values.deployment.probe_port }}
+          periodSeconds: {{ .Values.deployment.probe_interval }}
+          failureThreshold: {{ .Values.deployment.fail_count }}
+          initialDelaySeconds: {{ .Values.deployment.start_delay }}
+          timeoutSeconds: {{ .Values.deployment.probe_timeout }}
+          successThreshold: {{ .Values.deployment.success_count }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.deployment.use_command }}
+        command: ["{{ .Values.deployment.command }}"]
+        {{- end }}
+        {{- if .Values.deployment.use_args }}
+        args:
+        {{- range .Values.deployment.command_args }}
+          - {{ . }}
+        {{- end }}
+        {{- end }}
+        {{- if or .Values.deployment.set_requests .Values.deployment.set_limits }}
+        resources:
+        {{- end }}
+          {{- if .Values.deployment.set_limits }}
+          limits:
+            cpu: {{ .Values.deployment.cpu_limits }}
+            memory: {{ .Values.deployment.memory_limits }}
+          {{- end }}
+          {{- if .Values.deployment.set_requests }}
+          requests:
+            cpu: {{ .Values.deployment.cpu_requests }}
+            memory: {{ .Values.deployment.memory_requests }}
+          {{- end }}
+        {{- if .Values.deployment.create_service }}
+        ports:
+        {{- range .Values.deployment.ports_list }}
+        {{- $fields := split "|" . }}
+        - containerPort: {{ $fields._1 }}
+        {{- end }}
+        {{- end }}
+        {{- if or .Values.deployment.mount_volumes .Values.deployment.mount_configs }}
+        volumeMounts:
+        {{- end }}
+        {{- if .Values.deployment.mount_volumes }}
+            {{- range .Values.deployment.volumes_list }}
+            {{- $fields := split "|" . }}
+          - name: {{ $fields._0 }}
+            mountPath: {{ $fields._1 }}
+            {{- end }}
+        {{- end }}
+        {{- if .Values.deployment.mount_configs }}
+            {{- range .Values.deployment.configs_list }}
+            {{- $fields := split "|" . }}
+          - name: {{ $fields._0 }}
+            mountPath: {{ $fields._2 }}
+            subPath: {{ $fields._1 }}
+            {{- end }}
+        {{- end }}
+        {{- if .Values.deployment.load_env }}
+        {{- $env := .Values.env }}
+        {{- $env_file := print "configs/env_vars/" $env ".txt" }}
+        env:
+        {{- $.Files.Get $env_file | nindent 8}}
+        {{- end }}
+      {{- if or .Values.deployment.mount_volumes .Values.deployment.mount_configs }}
+      volumes:
+      {{- end }}
+      {{- if .Values.deployment.mount_volumes }}
+        {{- range .Values.deployment.volumes_list }}
+        {{- $fields := split "|" . }}
+        - name: {{ $fields._0 }}
+          persistentVolumeClaim:
+            claimName: {{ $fields._0 }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.deployment.mount_configs }}
+        {{- range .Values.deployment.configs_list }}
+        {{- $fields := split "|" . }}
+        - name: {{ $fields._0 }}
+          configMap:
+            name: {{ $fields._0 }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.deployment.use_secret }}
+      imagePullSecrets:
+      {{- range .Values.deployment.secret_list }}
+      - name: {{ . }}
+      {{- end }}
+      {{ end }}
+{{- end }}

@@ -1,0 +1,6 @@
+- name: "ENV"
+  value: "dev"
+- name: "DEBUG"
+  value: "False"
+- name: "LOG_LEVEL"
+  value: "INFO"

@@ -1,0 +1,17 @@
+{{- if .Values.config_maps.create }}
+  {{ $env := .Values.env }}
+  {{- range .Values.config_maps.configs_list }}
+  {{- $fields := split "|" . }}
+    {{ $config := print "configs/" $env "-" $fields._1 }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $fields._0 }}
+  labels:
+    name: {{ $fields._0 }}
+data:
+  {{ $fields._1 }}: |-
+{{- $.Files.Get $config | nindent 4 }}
+---
+  {{- end }}
+{{ end }}

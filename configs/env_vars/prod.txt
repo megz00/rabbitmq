@@ -1,0 +1,6 @@
+- name: "ENV"
+  value: "prod"
+- name: "DEBUG"
+  value: "False"
+- name: "LOG_LEVEL"
+  value: "INFO"

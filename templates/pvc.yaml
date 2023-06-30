@@ -1,0 +1,18 @@
+{{- if .Values.pvc.create }}
+{{ $storage_class := .Values.pvc.storage_class }}
+  {{ range .Values.pvc.volumes_list }}
+  {{- $fields := split "|" . }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ $fields._0 }}
+spec:
+  accessModes:
+  - {{ $fields._2 }}
+  storageClassName: {{ $storage_class }}
+  resources:
+    requests:
+      storage: {{ $fields._1 }}Gi
+---
+  {{ end }}
+{{ end }}

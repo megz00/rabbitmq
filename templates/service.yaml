@@ -1,0 +1,60 @@
+{{- if .Values.deployment.create_service }}
+{{- if eq (.Values.deployment.service_type) "ClusterIP" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.deployment.name }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .Values.deployment.name }}
+  ports:
+  {{- $svc := .Values.deployment.name }}
+  {{- range .Values.deployment.ports_list }}
+  {{- $fields := split "|" . }}
+    - port: {{ $fields._2 }}
+      targetPort: {{ $fields._1 }}
+      protocol: {{ $fields._0 }}
+      name: {{ $svc }}-{{ $fields._2 }}
+  {{- end }}
+{{ end }}
+{{- if eq (.Values.deployment.service_type) "NodePort" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.deployment.name }}
+spec:
+  type: NodePort
+  selector:
+    app: {{ .Values.deployment.name }}
+  ports:
+  {{- $svc := .Values.deployment.name }}
+  {{- range .Values.deployment.ports_list }}
+  {{- $fields := split "|" . }}
+    - port: {{ $fields._2 }}
+      targetPort: {{ $fields._1 }}
+      nodePort: {{ $fields._2 }}
+      protocol: {{ $fields._0 }}
+      name: {{ $svc }}-{{ $fields._2 }}
+  {{- end }}
+{{ end }}
+{{- if eq (.Values.deployment.service_type) "LoadBalancer" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.deployment.name }}
+spec:
+  type: LoadBalancer
+  selector:
+    app: {{ .Values.deployment.name }}
+  ports:
+  {{- $svc := .Values.deployment.name }}
+  {{- range .Values.deployment.ports_list }}
+  {{- $fields := split "|" . }}
+    - port: {{ $fields._2 }}
+      targetPort: {{ $fields._1 }}
+      protocol: {{ $fields._0 }}
+      name: {{ $svc }}-{{ $fields._2 }}
+  {{- end }}
+{{ end }}
+{{ end }}
